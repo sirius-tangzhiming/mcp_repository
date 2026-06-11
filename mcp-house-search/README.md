@@ -14,10 +14,6 @@
 
 ## 环境变量
 
-| 变量 | 默认值 | 说明 |
-|---|---|---|
-| `MILVUS_URI` | `http://10.15.208.159:19530` | Milvus 连接地址 |
-| `OLLAMA_EMBEDDING_URL` | `http://10.15.208.159:11434/api/embed` | Ollama Embedding API 地址 |
 
 ## 安装
 
