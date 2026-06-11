@@ -5,7 +5,13 @@
 工具:
   - query_house_info: 根据房屋ID精确查询房屋信息和业主信息
   - query_house_by_phone: 根据手机号查询业主房产信息（带签名验证）
+  - get_owner_by_name: 根据业主姓名模糊查询业主信息
   - query_outstanding_fees: 查询房屋欠费明细
+
+配置:
+  所有敏感配置通过环境变量注入，不硬编码任何链接或密钥：
+  - CHARGE_API_BASE: API基础地址（必填），如 https://charge-center.tq-service.com/app-api
+  - CHARGE_SIGN_SECRET: 签名密钥（必填），用于 listHouseInfoByPhone 接口
 """
 
 import hashlib
@@ -15,11 +21,17 @@ import requests
 from mcp.server.fastmcp import FastMCP
 
 # ============================== 配置 ==============================
+# 所有链接和密钥均通过环境变量配置，不硬编码到代码中
 API_BASE = os.environ.get("CHARGE_API_BASE", "")
-
-# 签名密钥（仅 listHouseInfoByPhone 接口需要）
 SIGN_SECRET = os.environ.get("CHARGE_SIGN_SECRET", "")
 SIGN_TYPE = "MD5"
+
+
+def _check_config() -> str | None:
+    """检查必填配置，返回错误信息或 None"""
+    if not API_BASE:
+        return "未配置 CHARGE_API_BASE 环境变量，请在启动时设置 API 基础地址"
+    return None
 
 def _generate_sign(params: dict) -> str:
     """根据查询参数生成 MD5 签名
@@ -122,7 +134,8 @@ def _format_fee_detail(fee: dict) -> str:
 
 mcp = FastMCP(
     "charge-center",
-    instructions="收费中心服务，提供房屋信息查询、业主信息查询、欠费查询功能",
+    instructions="收费中心服务，提供房屋信息查询、业主信息查询、欠费查询功能。"
+    "所有 API 地址和密钥通过环境变量 CHARGE_API_BASE / CHARGE_SIGN_SECRET 配置。",
 )
 
 
@@ -139,6 +152,10 @@ def query_house_info(house_ids: list[int], house_easy_ids: list[str] | None = No
         house_easy_ids: 房屋EasyId列表（UUID格式），如 ["C0BE4E9C-..."]，可选
         return_owner_info: 是否返回业主信息，True 返回业主信息，False 仅返回房屋信息
     """
+    err = _check_config()
+    if err:
+        return err
+
     payload = {
         "houseIds": house_ids,
         "houseEasyIds": house_easy_ids or [],
@@ -184,6 +201,13 @@ def query_house_by_phone(phone: str) -> str:
     Args:
         phone: 业主手机号，如 "15223063562"
     """
+    err = _check_config()
+    if err:
+        return err
+
+    if not SIGN_SECRET:
+        return "未配置 CHARGE_SIGN_SECRET 环境变量，手机号查询接口需要签名密钥"
+
     # 构造查询参数并生成签名
     params = {"phone": phone}
     sign = _generate_sign(params)
@@ -232,6 +256,10 @@ def query_outstanding_fees(house_ids: list[int], precinct_id: str, owner_ids: li
         charge_item_ids: 科目ID列表，如 [17]，可选，不传则查询所有科目
         precinct_id: 项目ID，必填，从上下文中获取，如 "69579"
     """
+    err = _check_config()
+    if err:
+        return err
+
     if not precinct_id:
         return "precinct_id（项目ID）为必填参数，请从上下文中获取"
 
@@ -282,6 +310,54 @@ def query_outstanding_fees(house_ids: list[int], precinct_id: str, owner_ids: li
         for fee in fees:
             lines.append(_format_fee_detail(fee))
         lines.append("")
+
+    return "\n".join(lines)
+
+
+# ============================== 工具4: get_owner_by_name ==============================
+@mcp.tool()
+def get_owner_by_name(owner_name: str) -> str:
+    """根据业主姓名查询业主信息。
+
+    适用于已知业主姓名，需要查询业主ID和属性的场景。
+    可能返回多条同名业主记录。
+
+    Args:
+        owner_name: 业主姓名，如 "张三"
+    """
+    err = _check_config()
+    if err:
+        return err
+
+    try:
+        resp = requests.post(
+            f"{API_BASE}/owner/getOwnerInfoByName",
+            json={"ownerName": owner_name},
+            headers={"Content-Type": "application/json"},
+            timeout=30,
+        )
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        return f"请求失败: {e}"
+
+    result = resp.json()
+    if result.get("code") != 200:
+        return f"接口返回错误: code={result.get('code')}, msg={result.get('msg', '')}"
+
+    data = result.get("data", [])
+    if not data:
+        return f"未找到业主: \"{owner_name}\""
+
+    lines = [f"业主查询: \"{owner_name}\" (返回{len(data)}条)\n"]
+    for i, owner in enumerate(data):
+        phones = owner.get("phones", [])
+        phone_str = ", ".join(phones) if phones else "无"
+        lines.append(
+            f"{i + 1}. 姓名: {owner.get('ownerName', '')} | "
+            f"业主ID: {owner.get('ownerId', '')} | "
+            f"属性: {owner.get('ownerProperty', '')} | "
+            f"电话: {phone_str}"
+        )
 
     return "\n".join(lines)
 
