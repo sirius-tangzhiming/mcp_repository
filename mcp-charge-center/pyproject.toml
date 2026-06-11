@@ -1,0 +1,18 @@
+[project]
+name = "mcp-charge-center"
+version = "0.1.0"
+description = "收费中心 MCP Server — 封装收费中心 Java API，提供房屋信息、业主信息、欠费查询"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.27.2",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+mcp-charge-center = "mcp_charge_center.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

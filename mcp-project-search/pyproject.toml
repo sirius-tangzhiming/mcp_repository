@@ -1,0 +1,19 @@
+[project]
+name = "mcp-project-search"
+version = "0.1.0"
+description = "项目搜索 MCP Server — 支持语义搜索、混合搜索(向量+BM25)和标量精确查询"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.27.2",
+    "pymilvus>=3.0.0",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+mcp-project-search = "mcp_project_search.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
