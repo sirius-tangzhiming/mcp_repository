@@ -1,0 +1,18 @@
+[project]
+name = "mcp-tds"
+version = "0.1.0"
+description = "TDS房产信息大屏 MCP Server — 封装TDS接口，提供户位信息、流转分析、缴费变动等查询"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.27.2",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+mcp-tds = "mcp_tds.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
