@@ -12,10 +12,10 @@ from pymilvus import MilvusClient, DataType, AnnSearchRequest, RRFRanker
 from mcp.server.fastmcp import FastMCP
 
 # ============================== 配置 ==============================
-MILVUS_URI = os.environ.get("MILVUS_URI", "http://10.15.208.159:19530")
+MILVUS_URI = os.environ.get("MILVUS_URI", "")
 COLLECTION_NAME = "monthly_project"
 
-OLLAMA_EMBEDDING_URL = os.environ.get("OLLAMA_EMBEDDING_URL", "http://10.15.208.159:11434/api/embed")
+OLLAMA_EMBEDDING_URL = os.environ.get("OLLAMA_EMBEDDING_URL", "")
 EMBEDDING_MODEL = "bge-m3:latest"
 EMBEDDING_DIM = 1024
 # ==================================================================
