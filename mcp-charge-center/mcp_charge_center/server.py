@@ -15,10 +15,10 @@ import requests
 from mcp.server.fastmcp import FastMCP
 
 # ============================== 配置 ==============================
-API_BASE = os.environ.get("CHARGE_API_BASE", "https://charge-center.tq-service.com/app-api")
+API_BASE = os.environ.get("CHARGE_API_BASE", "")
 
 # 签名密钥（仅 listHouseInfoByPhone 接口需要）
-SIGN_SECRET = os.environ.get("CHARGE_SIGN_SECRET", "xN9#kL$e@2025!Zy@wLq$#mR_+Pl0Ai^P*Z")
+SIGN_SECRET = os.environ.get("CHARGE_SIGN_SECRET", "")
 SIGN_TYPE = "MD5"
 
 def _generate_sign(params: dict) -> str:
