@@ -10,7 +10,7 @@
 
 配置:
   所有敏感配置通过环境变量注入，不硬编码任何链接或密钥：
-  - CHARGE_API_BASE: API基础地址（必填），如 https://charge-center.tq-service.com/app-api
+  - CHARGE_API_BASE: API基础地址（必填），如 
   - CHARGE_SIGN_SECRET: 签名密钥（必填），用于 listHouseInfoByPhone 接口
 """
 
